@@ -21,3 +21,5 @@ record CurrentUserResponse(String email, String displayName, String avatarUrl, b
 }
 
 record AuthProvidersResponse(boolean password, boolean google, boolean passkey) {}
+
+record PasskeyRegisteredResponse(boolean registered) {}

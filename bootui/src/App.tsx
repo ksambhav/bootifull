@@ -13,7 +13,6 @@ import {
 import {
   FingerprintIcon,
   KeyRoundIcon,
-  LogOutIcon,
   ShieldCheckIcon,
   SparklesIcon,
 } from "lucide-react"
@@ -38,27 +37,17 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { AppLayout } from "@/routes/app-layout"
+import { DashboardPage } from "@/routes/dashboard"
+import { ProfilePage } from "@/routes/profile"
 import {
-  fetchAuthProviders,
-  fetchCurrentUser,
+  authProvidersQuery,
+  currentUserQuery,
   loginWithPasskey,
   loginWithPassword,
-  logout,
-  registerPasskey,
   registerWithPassword,
   startGoogleSignIn,
-  type CurrentUser,
 } from "@/lib/auth"
-
-const authProvidersQuery = {
-  queryKey: ["auth-providers"],
-  queryFn: fetchAuthProviders,
-}
-
-const currentUserQuery = {
-  queryKey: ["current-user"],
-  queryFn: fetchCurrentUser,
-}
 
 const rootRoute = createRootRoute({ component: RootLayout })
 const indexRoute = createRoute({
@@ -66,12 +55,25 @@ const indexRoute = createRoute({
   path: "/",
   component: LandingPage,
 })
-const dashboardRoute = createRoute({
+const appRoute = createRoute({
   getParentRoute: () => rootRoute,
+  id: "_app",
+  component: AppLayout,
+})
+const dashboardRoute = createRoute({
+  getParentRoute: () => appRoute,
   path: "/dashboard",
   component: DashboardPage,
 })
-const routeTree = rootRoute.addChildren([indexRoute, dashboardRoute])
+const profileRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: "/profile",
+  component: ProfilePage,
+})
+const routeTree = rootRoute.addChildren([
+  indexRoute,
+  appRoute.addChildren([dashboardRoute, profileRoute]),
+])
 const router = createRouter({ routeTree })
 
 declare module "@tanstack/react-router" {
@@ -499,137 +501,6 @@ function AuthField({
       <Label htmlFor={id}>{label}</Label>
       {children}
       {error && <p className="text-xs text-destructive">{error}</p>}
-    </div>
-  )
-}
-
-function DashboardPage() {
-  const queryClient = useQueryClient()
-  const navigate = useNavigate()
-  const { data: user, isPending } = useQuery(currentUserQuery)
-  const passkey = useMutation({
-    mutationFn: () => registerPasskey("Bootifull passkey"),
-  })
-  const logoutMutation = useMutation({
-    mutationFn: logout,
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: currentUserQuery.queryKey,
-      })
-      await navigate({ to: "/" })
-    },
-  })
-
-  if (isPending) {
-    return <Shell user={user}>Loading...</Shell>
-  }
-
-  if (!user?.authenticated) {
-    return (
-      <Shell user={user}>
-        <Card>
-          <CardHeader>
-            <CardTitle>Sign in required</CardTitle>
-            <CardDescription>
-              Please return to the landing page to sign in.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button render={<Link to="/" />}>Go to landing page</Button>
-          </CardContent>
-        </Card>
-      </Shell>
-    )
-  }
-
-  return (
-    <Shell user={user}>
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader>
-            <CardTitle>Account</CardTitle>
-            <CardDescription>{user.email}</CardDescription>
-          </CardHeader>
-          <CardContent>{user.displayName}</CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Passkeys</CardTitle>
-            <CardDescription>
-              Add a passkey for passwordless sign-in.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-3">
-            <Button
-              onClick={() => passkey.mutate()}
-              disabled={passkey.isPending}
-            >
-              <FingerprintIcon data-icon="inline-start" />
-              {passkey.isPending ? "Registering..." : "Register passkey"}
-            </Button>
-            {passkey.isSuccess && (
-              <p className="text-sm text-muted-foreground">
-                Passkey registered.
-              </p>
-            )}
-            {passkey.isError && (
-              <p className="text-sm text-destructive">
-                {passkey.error.message}
-              </p>
-            )}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Session</CardTitle>
-            <CardDescription>
-              Manage your current browser session.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button variant="outline" onClick={() => logoutMutation.mutate()}>
-              <LogOutIcon data-icon="inline-start" />
-              Log out
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    </Shell>
-  )
-}
-
-function Shell({
-  children,
-  user,
-}: {
-  children: React.ReactNode
-  user?: CurrentUser
-}) {
-  return (
-    <div className="min-h-svh bg-background">
-      <header className="border-b">
-        <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <Link
-            to="/"
-            className="flex items-center gap-2 font-heading font-medium"
-          >
-            <ShieldCheckIcon data-icon="inline-start" />
-            Bootifull
-          </Link>
-          <div className="text-sm text-muted-foreground">
-            {user?.authenticated ? user.email : "Guest"}
-          </div>
-        </nav>
-      </header>
-      <main className="mx-auto flex max-w-6xl flex-col gap-6 px-6 py-10">
-        <div>
-          <h1 className="font-heading text-3xl font-medium">Dashboard</h1>
-          <p className="text-muted-foreground">
-            Starter workspace for authenticated users.
-          </p>
-        </div>
-        {children}
-      </main>
     </div>
   )
 }

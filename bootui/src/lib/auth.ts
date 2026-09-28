@@ -1,3 +1,5 @@
+import { queryOptions } from "@tanstack/react-query"
+
 export type CurrentUser = {
   email: string | null
   displayName: string | null
@@ -11,12 +13,20 @@ export type AuthProviders = {
   passkey: boolean
 }
 
+export type PasskeyRegistered = {
+  registered: boolean
+}
+
 export async function fetchCurrentUser(): Promise<CurrentUser> {
   return apiJson<CurrentUser>("/api/auth/me")
 }
 
 export async function fetchAuthProviders(): Promise<AuthProviders> {
   return apiJson<AuthProviders>("/api/auth/providers")
+}
+
+export async function fetchPasskeyRegistered(): Promise<PasskeyRegistered> {
+  return apiJson<PasskeyRegistered>("/api/auth/passkeys/registered")
 }
 
 export async function loginWithPassword(input: {
@@ -119,6 +129,21 @@ export async function loginWithPasskey() {
     throw new Error("Passkey sign in failed")
   }
 }
+
+export const authProvidersQuery = queryOptions({
+  queryKey: ["auth-providers"],
+  queryFn: fetchAuthProviders,
+})
+
+export const currentUserQuery = queryOptions({
+  queryKey: ["current-user"],
+  queryFn: fetchCurrentUser,
+})
+
+export const passkeyRegisteredQuery = queryOptions({
+  queryKey: ["passkey-registered"],
+  queryFn: fetchPasskeyRegistered,
+})
 
 async function apiJson<T>(url: string, init?: RequestInit): Promise<T> {
   const response = await fetch(url, { ...init, credentials: "include" })

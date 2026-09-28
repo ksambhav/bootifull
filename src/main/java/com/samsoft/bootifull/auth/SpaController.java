@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller
 class SpaController {
 
-	@GetMapping(value = { "/dashboard", "/app/{path:[^\\.]*}" })
+	@GetMapping(value = { "/dashboard", "/profile", "/app/{path:[^\\.]*}" })
 	String forwardSpaRoutes() {
 		return "forward:/index.html";
 	}

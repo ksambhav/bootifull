@@ -45,7 +45,7 @@ class SecurityConfig {
 				.authenticationEntryPoint((request, response, exception) -> response.sendError(HttpServletResponse.SC_UNAUTHORIZED))
 			)
 			.authorizeHttpRequests(authorize -> authorize
-				.requestMatchers("/", "/index.html", "/dashboard", "/assets/**", "/vite.svg", "/api/auth/register", "/api/auth/me", "/api/auth/providers", "/oauth2/**", "/login/oauth2/**", "/webauthn/authenticate/options", "/login/webauthn").permitAll()
+				.requestMatchers("/", "/index.html", "/dashboard", "/profile", "/assets/**", "/vite.svg", "/api/auth/register", "/api/auth/me", "/api/auth/providers", "/oauth2/**", "/login/oauth2/**", "/webauthn/authenticate/options", "/login/webauthn").permitAll()
 				.anyRequest().authenticated()
 			)
 			.formLogin(form -> form
