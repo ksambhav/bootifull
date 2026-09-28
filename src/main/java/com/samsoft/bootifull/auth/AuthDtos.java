@@ -19,3 +19,5 @@ record CurrentUserResponse(String email, String displayName, String avatarUrl, b
 		return new CurrentUserResponse(user.getEmail(), user.getDisplayName(), user.getAvatarUrl(), true);
 	}
 }
+
+record AuthProvidersResponse(boolean password, boolean google, boolean passkey) {}

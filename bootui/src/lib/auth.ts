@@ -5,8 +5,18 @@ export type CurrentUser = {
   authenticated: boolean
 }
 
+export type AuthProviders = {
+  password: boolean
+  google: boolean
+  passkey: boolean
+}
+
 export async function fetchCurrentUser(): Promise<CurrentUser> {
   return apiJson<CurrentUser>("/api/auth/me")
+}
+
+export async function fetchAuthProviders(): Promise<AuthProviders> {
+  return apiJson<AuthProviders>("/api/auth/providers")
 }
 
 export async function loginWithPassword(input: {
@@ -124,7 +134,9 @@ type PublicKeyCredentialCreationOptionsJSON = Omit<
 > & {
   challenge: string
   user: Omit<PublicKeyCredentialUserEntity, "id"> & { id: string }
-  excludeCredentials?: Array<Omit<PublicKeyCredentialDescriptor, "id"> & { id: string }>
+  excludeCredentials?: Array<
+    Omit<PublicKeyCredentialDescriptor, "id"> & { id: string }
+  >
 }
 
 type PublicKeyCredentialRequestOptionsJSON = Omit<
@@ -132,7 +144,9 @@ type PublicKeyCredentialRequestOptionsJSON = Omit<
   "challenge" | "allowCredentials"
 > & {
   challenge: string
-  allowCredentials?: Array<Omit<PublicKeyCredentialDescriptor, "id"> & { id: string }>
+  allowCredentials?: Array<
+    Omit<PublicKeyCredentialDescriptor, "id"> & { id: string }
+  >
 }
 
 function parseCreationOptions(
@@ -180,7 +194,9 @@ function serializePublicKeyCredential(credential: PublicKeyCredential) {
     )
     serializedResponse.signature = arrayBufferToBase64Url(response.signature)
     if (response.userHandle) {
-      serializedResponse.userHandle = arrayBufferToBase64Url(response.userHandle)
+      serializedResponse.userHandle = arrayBufferToBase64Url(
+        response.userHandle
+      )
     }
   }
 

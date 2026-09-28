@@ -39,6 +39,7 @@ import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
+  fetchAuthProviders,
   fetchCurrentUser,
   loginWithPasskey,
   loginWithPassword,
@@ -48,6 +49,11 @@ import {
   startGoogleSignIn,
   type CurrentUser,
 } from "@/lib/auth"
+
+const authProvidersQuery = {
+  queryKey: ["auth-providers"],
+  queryFn: fetchAuthProviders,
+}
 
 const currentUserQuery = {
   queryKey: ["current-user"],
@@ -90,7 +96,10 @@ function LandingPage() {
     <div className="min-h-svh bg-background text-foreground">
       <header className="sticky top-0 border-b bg-background/80 backdrop-blur">
         <nav className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-4">
-          <Link to="/" className="flex items-center gap-2 font-heading font-medium">
+          <Link
+            to="/"
+            className="flex items-center gap-2 font-heading font-medium"
+          >
             <ShieldCheckIcon data-icon="inline-start" />
             Bootifull
           </Link>
@@ -142,7 +151,11 @@ function LandingPage() {
               <Button size="lg" onClick={() => setAuthOpen(true)}>
                 Start building
               </Button>
-              <Button size="lg" variant="outline" render={<Link to="/dashboard" />}>
+              <Button
+                size="lg"
+                variant="outline"
+                render={<Link to="/dashboard" />}
+              >
                 View dashboard
               </Button>
             </div>
@@ -172,10 +185,22 @@ function LandingPage() {
           </Card>
         </section>
 
-        <section id="features" className="mx-auto grid max-w-6xl gap-4 px-6 pb-20 md:grid-cols-3">
-          <FeatureCard title="Secure by default" description="BCrypt passwords, OAuth2 login, and WebAuthn passkey flows backed by Postgres." />
-          <FeatureCard title="Template-friendly" description="Keep this starter generic, reusable, and ready for your next product launch." />
-          <FeatureCard title="Modern React" description="shadcn/ui composition with TanStack Router, Query, and Form for app workflows." />
+        <section
+          id="features"
+          className="mx-auto grid max-w-6xl gap-4 px-6 pb-20 md:grid-cols-3"
+        >
+          <FeatureCard
+            title="Secure by default"
+            description="BCrypt passwords, OAuth2 login, and WebAuthn passkey flows backed by Postgres."
+          />
+          <FeatureCard
+            title="Template-friendly"
+            description="Keep this starter generic, reusable, and ready for your next product launch."
+          />
+          <FeatureCard
+            title="Modern React"
+            description="shadcn/ui composition with TanStack Router, Query, and Form for app workflows."
+          />
         </section>
       </main>
 
@@ -184,7 +209,13 @@ function LandingPage() {
   )
 }
 
-function FeatureCard({ title, description }: { title: string; description: string }) {
+function FeatureCard({
+  title,
+  description,
+}: {
+  title: string
+  description: string
+}) {
   return (
     <Card>
       <CardHeader>
@@ -233,11 +264,14 @@ function AuthDialog({
 function LoginForm({ onDone }: { onDone: () => void }) {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const { data: providers } = useQuery(authProvidersQuery)
   const [error, setError] = useState<string | null>(null)
   const login = useMutation({
     mutationFn: loginWithPassword,
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: currentUserQuery.queryKey })
+      await queryClient.invalidateQueries({
+        queryKey: currentUserQuery.queryKey,
+      })
       onDone()
       await navigate({ to: "/dashboard" })
     },
@@ -246,7 +280,9 @@ function LoginForm({ onDone }: { onDone: () => void }) {
   const passkey = useMutation({
     mutationFn: loginWithPasskey,
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: currentUserQuery.queryKey })
+      await queryClient.invalidateQueries({
+        queryKey: currentUserQuery.queryKey,
+      })
       onDone()
       await navigate({ to: "/dashboard" })
     },
@@ -269,7 +305,11 @@ function LoginForm({ onDone }: { onDone: () => void }) {
       >
         <form.Field name="email">
           {(field) => (
-            <AuthField id={field.name} label="Email" error={firstError(field.state.meta.errors)}>
+            <AuthField
+              id={field.name}
+              label="Email"
+              error={firstError(field.state.meta.errors)}
+            >
               <Input
                 id={field.name}
                 name={field.name}
@@ -285,7 +325,11 @@ function LoginForm({ onDone }: { onDone: () => void }) {
         </form.Field>
         <form.Field name="password">
           {(field) => (
-            <AuthField id={field.name} label="Password" error={firstError(field.state.meta.errors)}>
+            <AuthField
+              id={field.name}
+              label="Password"
+              error={firstError(field.state.meta.errors)}
+            >
               <Input
                 id={field.name}
                 name={field.name}
@@ -307,10 +351,16 @@ function LoginForm({ onDone }: { onDone: () => void }) {
       </form>
       <Separator />
       <div className="flex flex-col gap-2">
-        <Button variant="outline" onClick={startGoogleSignIn}>
-          Continue with Google
-        </Button>
-        <Button variant="outline" onClick={() => passkey.mutate()} disabled={passkey.isPending}>
+        {providers?.google && (
+          <Button variant="outline" onClick={startGoogleSignIn}>
+            Continue with Google
+          </Button>
+        )}
+        <Button
+          variant="outline"
+          onClick={() => passkey.mutate()}
+          disabled={passkey.isPending}
+        >
           <FingerprintIcon data-icon="inline-start" />
           {passkey.isPending ? "Checking passkey..." : "Sign in with passkey"}
         </Button>
@@ -322,14 +372,21 @@ function LoginForm({ onDone }: { onDone: () => void }) {
 function RegisterForm({ onDone }: { onDone: () => void }) {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const { data: providers } = useQuery(authProvidersQuery)
   const [error, setError] = useState<string | null>(null)
   const register = useMutation({
-    mutationFn: async (value: { email: string; password: string; displayName: string }) => {
+    mutationFn: async (value: {
+      email: string
+      password: string
+      displayName: string
+    }) => {
       await registerWithPassword(value)
       await loginWithPassword({ email: value.email, password: value.password })
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: currentUserQuery.queryKey })
+      await queryClient.invalidateQueries({
+        queryKey: currentUserQuery.queryKey,
+      })
       onDone()
       await navigate({ to: "/dashboard" })
     },
@@ -352,7 +409,11 @@ function RegisterForm({ onDone }: { onDone: () => void }) {
       >
         <form.Field name="displayName">
           {(field) => (
-            <AuthField id={field.name} label="Name" error={firstError(field.state.meta.errors)}>
+            <AuthField
+              id={field.name}
+              label="Name"
+              error={firstError(field.state.meta.errors)}
+            >
               <Input
                 id={field.name}
                 name={field.name}
@@ -366,7 +427,11 @@ function RegisterForm({ onDone }: { onDone: () => void }) {
         </form.Field>
         <form.Field name="email">
           {(field) => (
-            <AuthField id={field.name} label="Email" error={firstError(field.state.meta.errors)}>
+            <AuthField
+              id={field.name}
+              label="Email"
+              error={firstError(field.state.meta.errors)}
+            >
               <Input
                 id={field.name}
                 name={field.name}
@@ -381,7 +446,11 @@ function RegisterForm({ onDone }: { onDone: () => void }) {
         </form.Field>
         <form.Field name="password">
           {(field) => (
-            <AuthField id={field.name} label="Password" error={firstError(field.state.meta.errors)}>
+            <AuthField
+              id={field.name}
+              label="Password"
+              error={firstError(field.state.meta.errors)}
+            >
               <Input
                 id={field.name}
                 name={field.name}
@@ -399,10 +468,14 @@ function RegisterForm({ onDone }: { onDone: () => void }) {
           {register.isPending ? "Creating account..." : "Create account"}
         </Button>
       </form>
-      <Separator />
-      <Button variant="outline" onClick={startGoogleSignIn}>
-        Continue with Google
-      </Button>
+      {providers?.google && (
+        <>
+          <Separator />
+          <Button variant="outline" onClick={startGoogleSignIn}>
+            Continue with Google
+          </Button>
+        </>
+      )}
     </div>
   )
 }
@@ -419,7 +492,10 @@ function AuthField({
   children: React.ReactNode
 }) {
   return (
-    <div className="flex flex-col gap-2" data-invalid={Boolean(error) || undefined}>
+    <div
+      className="flex flex-col gap-2"
+      data-invalid={Boolean(error) || undefined}
+    >
       <Label htmlFor={id}>{label}</Label>
       {children}
       {error && <p className="text-xs text-destructive">{error}</p>}
@@ -431,11 +507,15 @@ function DashboardPage() {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const { data: user, isPending } = useQuery(currentUserQuery)
-  const passkey = useMutation({ mutationFn: () => registerPasskey("Bootifull passkey") })
+  const passkey = useMutation({
+    mutationFn: () => registerPasskey("Bootifull passkey"),
+  })
   const logoutMutation = useMutation({
     mutationFn: logout,
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: currentUserQuery.queryKey })
+      await queryClient.invalidateQueries({
+        queryKey: currentUserQuery.queryKey,
+      })
       await navigate({ to: "/" })
     },
   })
@@ -450,7 +530,9 @@ function DashboardPage() {
         <Card>
           <CardHeader>
             <CardTitle>Sign in required</CardTitle>
-            <CardDescription>Please return to the landing page to sign in.</CardDescription>
+            <CardDescription>
+              Please return to the landing page to sign in.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <Button render={<Link to="/" />}>Go to landing page</Button>
@@ -473,21 +555,36 @@ function DashboardPage() {
         <Card>
           <CardHeader>
             <CardTitle>Passkeys</CardTitle>
-            <CardDescription>Add a passkey for passwordless sign-in.</CardDescription>
+            <CardDescription>
+              Add a passkey for passwordless sign-in.
+            </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
-            <Button onClick={() => passkey.mutate()} disabled={passkey.isPending}>
+            <Button
+              onClick={() => passkey.mutate()}
+              disabled={passkey.isPending}
+            >
               <FingerprintIcon data-icon="inline-start" />
               {passkey.isPending ? "Registering..." : "Register passkey"}
             </Button>
-            {passkey.isSuccess && <p className="text-sm text-muted-foreground">Passkey registered.</p>}
-            {passkey.isError && <p className="text-sm text-destructive">{passkey.error.message}</p>}
+            {passkey.isSuccess && (
+              <p className="text-sm text-muted-foreground">
+                Passkey registered.
+              </p>
+            )}
+            {passkey.isError && (
+              <p className="text-sm text-destructive">
+                {passkey.error.message}
+              </p>
+            )}
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
             <CardTitle>Session</CardTitle>
-            <CardDescription>Manage your current browser session.</CardDescription>
+            <CardDescription>
+              Manage your current browser session.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <Button variant="outline" onClick={() => logoutMutation.mutate()}>
@@ -501,12 +598,21 @@ function DashboardPage() {
   )
 }
 
-function Shell({ children, user }: { children: React.ReactNode; user?: CurrentUser }) {
+function Shell({
+  children,
+  user,
+}: {
+  children: React.ReactNode
+  user?: CurrentUser
+}) {
   return (
     <div className="min-h-svh bg-background">
       <header className="border-b">
         <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <Link to="/" className="flex items-center gap-2 font-heading font-medium">
+          <Link
+            to="/"
+            className="flex items-center gap-2 font-heading font-medium"
+          >
             <ShieldCheckIcon data-icon="inline-start" />
             Bootifull
           </Link>
@@ -518,7 +624,9 @@ function Shell({ children, user }: { children: React.ReactNode; user?: CurrentUs
       <main className="mx-auto flex max-w-6xl flex-col gap-6 px-6 py-10">
         <div>
           <h1 className="font-heading text-3xl font-medium">Dashboard</h1>
-          <p className="text-muted-foreground">Starter workspace for authenticated users.</p>
+          <p className="text-muted-foreground">
+            Starter workspace for authenticated users.
+          </p>
         </div>
         {children}
       </main>

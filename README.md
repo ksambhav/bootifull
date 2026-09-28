@@ -55,17 +55,25 @@ pnpm build
 
 ## Google SSO setup
 
-Create a Google OAuth client and add this redirect URI for local backend development:
+Create a Google OAuth client and add these redirect URIs:
 
 ```text
+http://localhost:5173/login/oauth2/code/google
 http://localhost:8080/login/oauth2/code/google
 ```
 
-Set credentials before starting the backend:
+The `5173` URI is for Vite dev. The `8080` URI is for the packaged app served by Spring Boot.
+
+Put credentials in a root `.env` file:
 
 ```bash
-export SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_ID="your-client-id"
-export SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_SECRET="your-client-secret"
+CLIENT_ID=your-client-id
+CLIENT_SECRET=your-client-secret
+```
+
+Then start the backend:
+
+```bash
 ./mvnw spring-boot:run
 ```
 
@@ -94,11 +102,9 @@ Then open:
 http://localhost:8080
 ```
 
-Optional Google credentials for Docker Compose can be provided with Spring Boot's OAuth environment variables:
+Docker Compose also reads Google credentials from the root `.env` file:
 
 ```bash
-SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_ID="your-client-id" \
-SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_SECRET="your-client-secret" \
 docker compose -f docker-compose.yaml up --build
 ```
 

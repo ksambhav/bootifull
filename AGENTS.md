@@ -18,7 +18,8 @@
 ## Frontend (`bootui/`)
 - Use pnpm from `bootui/` (`pnpm-lock.yaml` is the lockfile); there is no root frontend script.
 - Useful checks: `pnpm typecheck`, `pnpm build`, `pnpm lint`, and `pnpm format`.
-- Vite dev server proxies `/api`, `/oauth2`, `/login`, and `/webauthn` to `http://localhost:8080`.
+- Vite dev server proxies `/api`, `/oauth2`, `/login`, and `/webauthn` to `http://localhost:8080`; `/oauth2` and `/login` use `changeOrigin: false` so Spring OAuth computes the local dev callback as `http://localhost:5173/login/oauth2/code/google`.
+- Google OAuth local credentials are read from root `.env` keys `CLIENT_ID` and `CLIENT_SECRET`; `application.yaml` imports `.env` with a non-empty placeholder client id because Spring Security rejects an empty OAuth client id during startup.
 - Vite uses `@` as `bootui/src` (`vite.config.ts`, `tsconfig*.json`); prefer `@/...` imports for app code.
 - shadcn/ui is configured in `components.json` with `style: base-nova`, `@base-ui/react`, lucide icons, Tailwind CSS v4, and CSS variables in `src/index.css` (no `tailwind.config.*`).
 - Prettier is configured for no semicolons, double quotes, Tailwind class sorting, and `src/index.css` as the Tailwind stylesheet.

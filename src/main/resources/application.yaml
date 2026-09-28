@@ -1,5 +1,27 @@
 spring:
+  config:
+    import: optional:file:.env[.properties]
   application:
     name: bootifull
   main:
     banner-mode: "off"
+  datasource:
+    url: jdbc:postgresql://localhost:5432/bootifull
+    username: bootifull
+    password: bootifull
+    driver-class-name: org.postgresql.Driver
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            provider: google
+            client-id: ${CLIENT_ID:bootifull-local-placeholder}
+            client-secret: ${CLIENT_SECRET:}
+logging:
+  level:
+    root: INFO
+    org.springframework.security: DEBUG
+    org.springframework.web: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
